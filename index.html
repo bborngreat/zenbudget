@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZenBudget | Personal Finance Tracker</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>ðŸ’°</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
     <style>
 /* Base Styles & Variables */
 :root {
@@ -37,6 +41,9 @@
     
     --transition: all 0.3s ease;
 }
+
+/* Import Symbol Font */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols:wght@400;700&display=swap');
 
 * {
     margin: 0;
@@ -96,6 +103,48 @@ body {
     color: var(--text-muted);
     font-weight: 300;
     letter-spacing: 1px;
+}
+
+/* Currency Selector Styles */
+.currency-selector {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.currency-selector label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.currency-selector select {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    min-width: 140px;
+}
+
+.currency-selector select:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.currency-selector select:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Card Base Styles */
@@ -264,7 +313,9 @@ input:focus, select:focus {
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-secondary);
-    font-weight: 500;
+    font-weight: 600;
+    font-family: 'Noto Sans Symbols', "Segoe UI Symbol", "Apple Symbols", sans-serif;
+    font-size: 1.1rem;
 }
 
 .amount-input input {
@@ -733,7 +784,18 @@ input:focus, select:focus {
     .data-actions {
         flex-direction: column;
     }
+    
+    .currency-selector {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+    
+    .currency-selector select {
+        width: 100%;
+    }
 }
+</style>
     </style>
 </head>
 <body>
@@ -744,6 +806,18 @@ input:focus, select:focus {
                 <h1>ZenBudget</h1>
             </div>
             <p class="tagline">Mindful Spending, Peaceful Living</p>
+            
+            <!-- Currency Selector -->
+            <div class="currency-selector">
+                <label for="currency"><i class="fas fa-globe"></i> Currency</label>
+                <select id="currency">
+                    <option value="GHS">GHS - Ghanaian Cedi</option>
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="NGN">NGN - Nigerian Naira</option>
+                </select>
+            </div>
         </header>
 
         <main class="dashboard">
@@ -763,15 +837,15 @@ input:focus, select:focus {
                         </button>
                     </div>
                 </div>
-                <div class="balance-amount" id="total-balance">$0.00</div>
+                <div class="balance-amount" id="total-balance">0.00</div>
                 <div class="balance-stats">
                     <div class="stat">
                         <span class="stat-label">Income</span>
-                        <span class="stat-value income" id="total-income">$0.00</span>
+                        <span class="stat-value income" id="total-income">0.00</span>
                     </div>
                     <div class="stat">
                         <span class="stat-label">Expenses</span>
-                        <span class="stat-value expense" id="total-expense">$0.00</span>
+                        <span class="stat-value expense" id="total-expense">0.00</span>
                     </div>
                 </div>
             </div>
@@ -788,7 +862,7 @@ input:focus, select:focus {
                     <div class="form-group">
                         <label for="amount"><i class="fas fa-dollar-sign"></i> Amount</label>
                         <div class="amount-input">
-                            <span class="currency-symbol">G</span>
+                            <span class="currency-symbol"></span>
                             <input type="number" id="amount" step="0.01" placeholder="0.00" required>
                         </div>
                         <div class="amount-hint">
@@ -801,11 +875,11 @@ input:focus, select:focus {
                         <label for="category"><i class="fas fa-tag"></i> Category</label>
                         <select id="category" required>
                             <option value="" disabled selected>Select a category</option>
-                            <option value="Food">Food</option>
-                            <option value="Rent">Rent</option>
+                            <option value="Food and Groceries">Food and Groceries</option>
+                            <option value="Housing">Housing</option>
                             <option value="Fun">Fun</option>
                             <option value="Income">Income</option>
-                            <option value="Other">Other</option>
+                            <option value="Utilities">Utilities</option>
                         </select>
                     </div>
                     
@@ -866,10 +940,10 @@ input:focus, select:focus {
     <input type="file" id="file-input" accept=".json" style="display: none;">
 
         <script>
-// ZenBudget Finance Tracker - Enhanced with LocalStorage + Export/Import
+// ZenBudget Finance Tracker - Enhanced with LocalStorage + Export/Import + Multi-Currency
 
 // =============== CONFIGURATION ===============
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const LOCALSTORAGE_KEY = 'zenbudget_data';
 
 // =============== APP STATE MANAGEMENT ===============
@@ -882,7 +956,11 @@ const appState = {
         createdAt: null
     },
     transactions: [],
-    filteredTransactions: []
+    filteredTransactions: [],
+    settings: {
+        currency: 'GHS',
+        currencySymbol: ''
+    }
 };
 
 // DOM Elements
@@ -906,10 +984,101 @@ const confirmClearButton = document.getElementById('confirm-clear');
 const categoryBarsContainer = document.getElementById('category-bars');
 const emptyListText = document.getElementById('empty-list-text');
 const emptySummaryText = document.getElementById('empty-summary-text');
+const currencySelect = document.getElementById('currency');
 
 // Auto-save debounce timer
 let autoSaveTimer = null;
 const AUTO_SAVE_DELAY = 1000; // 1 second delay
+
+// =============== CURRENCY FUNCTIONS ===============
+function getCurrencySymbol(currencyCode) {
+    const symbols = {
+        'GHS': 'G',
+        'USD': '$',
+        'CAD': 'C$',
+        'AUD': 'A$',
+        'NGN': 'N'
+    };
+    return symbols[currencyCode] || currencyCode;
+}
+
+function getCurrencyInfo(currencyCode) {
+    const currencies = {
+        'GHS': {
+            symbol: '',
+            name: 'Ghanaian Cedi',
+            locale: 'en-GH',
+            code: 'GHS'
+        },
+        'USD': {
+            symbol: '$',
+            name: 'US Dollar',
+            locale: 'en-US',
+            code: 'USD'
+        },
+        'CAD': {
+            symbol: 'C$',
+            name: 'Canadian Dollar',
+            locale: 'en-CA',
+            code: 'CAD'
+        },
+        'AUD': {
+            symbol: 'A$',
+            name: 'Australian Dollar',
+            locale: 'en-AU',
+            code: 'AUD'
+        },
+        'NGN': {
+            symbol: '',
+            name: 'Nigerian Naira',
+            locale: 'en-NG',
+            code: 'NGN'
+        }
+    };
+    return currencies[currencyCode] || currencies['GHS'];
+}
+
+function updateCurrencySymbol() {
+    const currencySymbolElement = document.querySelector('.currency-symbol');
+    if (currencySymbolElement) {
+        currencySymbolElement.textContent = appState.settings.currencySymbol;
+    }
+    
+    // Set currency dropdown value
+    if (currencySelect) {
+        currencySelect.value = appState.settings.currency;
+    }
+}
+
+function changeCurrency(newCurrency) {
+    // Update app state
+    appState.settings.currency = newCurrency;
+    appState.settings.currencySymbol = getCurrencySymbol(newCurrency);
+    
+    // Update currency symbol in form
+    updateCurrencySymbol();
+    
+    // Mark state as changed
+    markStateChanged();
+    
+    // Update UI
+    hydrateUI();
+    
+    // Show notification
+    const currencyInfo = getCurrencyInfo(newCurrency);
+    showNotification(`Currency changed to ${currencyInfo.name} (${newCurrency})`, 'success');
+}
+
+function formatCurrency(amount) {
+    const currencyInfo = getCurrencyInfo(appState.settings.currency);
+    
+    return new Intl.NumberFormat(currencyInfo.locale, {
+        style: 'currency',
+        currency: currencyInfo.code,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
 
 // =============== LOCALSTORAGE FUNCTIONS ===============
 function saveToLocalStorage() {
@@ -958,7 +1127,13 @@ function loadFromLocalStorage() {
         // Version migration check
         if (parsedData.meta && parsedData.meta.version !== APP_VERSION) {
             console.log(`Migrating data from version ${parsedData.meta.version} to ${APP_VERSION}`);
-            // In future, add migration logic here if needed
+            // Migrate old data structure if needed
+            if (!parsedData.settings) {
+                parsedData.settings = {
+                    currency: 'GHS',
+                    currencySymbol: ''
+                };
+            }
         }
         
         // Merge loaded data into appState
@@ -973,6 +1148,14 @@ function loadFromLocalStorage() {
         if (!appState.transactions || !Array.isArray(appState.transactions)) {
             appState.transactions = [];
             appState.filteredTransactions = [];
+        }
+        
+        // Ensure settings exist
+        if (!appState.settings) {
+            appState.settings = {
+                currency: 'GHS',
+                currencySymbol: ''
+            };
         }
         
         // Sort transactions by date (newest first)
@@ -1007,6 +1190,14 @@ function validateAppState(data) {
     if (!Array.isArray(data.transactions)) {
         console.error('Invalid data: transactions is not an array');
         return false;
+    }
+    
+    // Ensure settings exist (for backward compatibility)
+    if (!data.settings) {
+        data.settings = {
+            currency: 'GHS',
+            currencySymbol: ''
+        };
     }
     
     // Validate each transaction
@@ -1082,6 +1273,9 @@ function init() {
     // Set up event listeners
     setupEventListeners();
     
+    // Update currency symbol in form
+    updateCurrencySymbol();
+    
     // Initial UI render
     hydrateUI();
     
@@ -1100,6 +1294,10 @@ function resetAppState() {
     };
     appState.transactions = [];
     appState.filteredTransactions = [];
+    appState.settings = {
+        currency: 'GHS',
+        currencySymbol: ''
+    };
 }
 
 // =============== AUTO-SAVE MANAGEMENT ===============
@@ -1144,6 +1342,13 @@ function setupEventListeners() {
     saveDataButton.addEventListener('click', exportData);
     loadDataButton.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', importData);
+    
+    // Currency change
+    if (currencySelect) {
+        currencySelect.addEventListener('change', (e) => {
+            changeCurrency(e.target.value);
+        });
+    }
     
     // Modal controls
     closeModalButton.addEventListener('click', closeModal);
@@ -1467,12 +1672,23 @@ Do you want to continue loading?`)) {
                 appState.filteredTransactions = [...appState.transactions];
             }
             
+            // Ensure settings exist (for backward compatibility)
+            if (!appState.settings) {
+                appState.settings = {
+                    currency: 'GHS',
+                    currencySymbol: ''
+                };
+            }
+            
             // Sort transactions by date (newest first)
             appState.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
             appState.filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
             
             // Save imported data to localStorage
             const saved = saveToLocalStorage();
+            
+            // Update currency symbol in form
+            updateCurrencySymbol();
             
             // Rehydrate UI
             hydrateUI();
@@ -1521,11 +1737,11 @@ function clearAllTransactions() {
 
 function getCategoryColor(category) {
     const colors = {
-        'Food': '#10b981',
-        'Rent': '#6366f1',
+        'Food and Groceries': '#10b981',
+        'Housing': '#6366f1',
         'Fun': '#8b5cf6',
         'Income': '#06b6d4',
-        'Other': '#f59e0b'
+        'Utilities': '#f59e0b'
     };
     
     return colors[category] || '#94a3b8';
@@ -1533,22 +1749,14 @@ function getCategoryColor(category) {
 
 function getCategoryIcon(category) {
     const icons = {
-        'Food': 'utensils',
-        'Rent': 'home',
+        'Food and Groceries': 'utensils',
+        'Housing': 'home',
         'Fun': 'gamepad',
         'Income': 'money-bill-wave',
-        'Other': 'shopping-bag'
+        'Utilities': 'shopping-bag'
     };
     
     return icons[category] || 'tag';
-}
-
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'GHS',
-        minimumFractionDigits: 2
-    }).format(amount);
 }
 
 function showNotification(message, type = 'info') {
@@ -1612,40 +1820,15 @@ function showNotification(message, type = 'info') {
 // =============== INITIALIZE APP ===============
 document.addEventListener('DOMContentLoaded', init);
 
-// Optional: Add sample data for testing (uncomment to enable)
-/*
-function addSampleData() {
-    const sampleTransactions = [
-        { name: 'Salary', amount: 3500, category: 'Income', date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
-        { name: 'Rent', amount: -1200, category: 'Rent', date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString() },
-        { name: 'Groceries', amount: -150, category: 'Food', date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-        { name: 'Concert Tickets', amount: -85, category: 'Fun', date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() },
-        { name: 'Freelance Work', amount: 800, category: 'Income', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-        { name: 'Restaurant', amount: -65, category: 'Food', date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-        { name: 'Netflix Subscription', amount: -15.99, category: 'Fun', date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
-        { name: 'Coffee Shop', amount: -12.5, category: 'Food', date: new Date().toISOString() }
-    ];
-    
-    sampleTransactions.forEach(transaction => {
-        const fullTransaction = {
-            ...transaction,
-            id: Date.now() + Math.random(),
-            type: transaction.amount >= 0 ? 'income' : 'expense'
-        };
-        
-        appState.transactions.push(fullTransaction);
-    });
-    
-    appState.filteredTransactions = [...appState.transactions];
-    saveToLocalStorage();
-    hydrateUI();
-    
-    showNotification('Sample data loaded. Try the save/load features!', 'success');
-}
-
-// Add sample data after 1 second
-setTimeout(addSampleData, 1000);
-*/
+    </script>
+        <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('PWA Service Worker Registered!'))
+            .catch(err => console.error('PWA Service Worker Failed!', err));
+        });
+      }
     </script>
 </body>
 </html>
