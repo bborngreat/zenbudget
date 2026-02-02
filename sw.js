@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zenbudget-v1';
+const CACHE_NAME = 'zenbudget-v1.2';
 const assets = [
   './index.html',
   './manifest.json',
@@ -18,3 +18,4 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((response) => response || fetch(event.request))
   );
 });
+
