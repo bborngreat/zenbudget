@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zenbudget-v1.3';
+const CACHE_NAME = 'zenbudget-v1.4';
 const FONT_CACHE = 'zenbudget-fonts-v1';
 
 // Core assets (your existing ones + fonts)
