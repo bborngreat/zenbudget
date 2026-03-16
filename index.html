@@ -939,7 +939,7 @@ input:focus, select:focus {
 }
 
 </style>
-    
+
 </head>
 <body>
     <div class="container">
@@ -1014,6 +1014,7 @@ input:focus, select:focus {
                             <option value="Fun">Fun</option>
                             <option value="Income">Income</option>
                             <option value="Utilities">Utilities</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
                     
@@ -1896,7 +1897,8 @@ function getCategoryColor(category) {
         'Housing': '#6366f1',
         'Fun': '#8b5cf6',
         'Income': '#06b6d4',
-        'Utilities': '#f59e0b'
+        'Utilities': '#f59e0b',
+        'Other': '#6b7280'
     };
     
     return colors[category] || '#94a3b8';
@@ -1908,7 +1910,8 @@ function getCategoryIcon(category) {
         'Housing': 'home',
         'Fun': 'gamepad',
         'Income': 'money-bill-wave',
-        'Utilities': 'shopping-bag'
+        'Utilities': 'shopping-bag',
+        'Other': 'ellipsis-h'
     };
     
     return icons[category] || 'tag';
@@ -2005,4 +2008,3 @@ if (fabToggle && fabMenu) {
     </script>
 </body>
 </html>
-
