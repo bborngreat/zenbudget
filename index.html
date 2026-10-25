@@ -9,7 +9,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>ðŸ’°</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
     <style>
 /* Base Styles & Variables */
 :root {
@@ -107,7 +107,7 @@ body {
     margin: 0 auto;
     padding: 20px;
     padding-top: 100px;
-    padding-bottom: 72px;
+    padding-bottom: 110px; /* Increased for bottom nav */
 }
 
 /* ===================================================== */
@@ -793,9 +793,7 @@ input:focus, select:focus {
     .balance-stats { flex-direction: column; }
     .balance-amount { font-size: 2.5rem; }
     .modal { width: 95%; padding: 20px; }
-    .fab-container { bottom: 12px; }
-    .fab { width: 44px; height: 44px; font-size: 1.05rem; }
-    .container { padding-top: 90px; padding-bottom: 66px; }
+    .container { padding-top: 90px; padding-bottom: 100px; }
 }
 
 @media (max-width: 480px) {
@@ -804,7 +802,7 @@ input:focus, select:focus {
     .icon-btn { width: 42px; height: 42px; font-size: 1.15rem; }
     .balance-amount { font-size: 2rem; }
     .card { padding: 20px 16px; }
-    .container { padding-top: 85px; }
+    .container { padding-top: 85px; padding-bottom: 100px; }
     #delete-modal .modal,
     #confirmation-modal .modal {
         max-width: 320px;
@@ -819,9 +817,6 @@ input:focus, select:focus {
     #confirmation-modal .modal-body p { font-size: 0.9rem; margin-bottom: 16px; }
     #delete-modal .btn-cancel, #delete-modal .btn-confirm,
     #confirmation-modal .btn-cancel, #confirmation-modal .btn-confirm { padding: 9px 16px; font-size: 0.85rem; }
-    .fab-container { bottom: 10px; }
-    .fab { width: 44px; height: 44px; }
-    .container { padding-bottom: 64px; }
     .transaction-content { padding: 12px; gap: 8px; }
     .transaction-amount { font-size: 1rem; }
     .transaction-actions { gap: 6px; }
@@ -936,45 +931,86 @@ input:focus, select:focus {
 .menu-item.clear:hover { background: rgba(239, 68, 68, 0.2); border-color: var(--danger-color); color: var(--danger-color); }
 .menu-item.filter:hover { background: rgba(245, 158, 11, 0.2); border-color: var(--warning-color); color: var(--warning-color); }
 
-.fab-container {
+/* ===================================================== */
+/* Bottom Floating Navigation Bar                        */
+/* ===================================================== */
+.bottom-nav-bar {
     position: fixed;
-    bottom: 14px;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 100;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 6px 12px;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    width: calc(100% - 32px);
+    max-width: 400px;
 }
 
-.fab {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: rgba(30, 41, 59, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    font-size: 1.15rem;
+.nav-filter-btn {
+    background: transparent;
+    /* Add this transparent border so the layout doesn't jump when active */
+    border: 1.5px solid transparent; 
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 10px 12px;
+    border-radius: 20px;
+    transition: var(--transition);
+    white-space: nowrap;
+    flex: 1;
+}
+
+.nav-filter-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-filter-btn.active {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05); /* Keeps the inside mostly dark */
+    border: 1.5px solid var(--primary-color); /* The crisp inner line */
+    font-weight: 600;
+    /* This creates the dual-layered neon glow effect */
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.9), 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.bottom-nav-bar .fab {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    color: white;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fab-in 0.45s ease-out;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    margin: 0 4px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
 }
 
-@keyframes fab-in {
-    from { opacity: 0; transform: scale(0.6); }
-    to   { opacity: 1; transform: scale(1); }
+.bottom-nav-bar .fab:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.6);
 }
 
-.fab:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+.bottom-nav-bar .fab:active {
+    transform: scale(0.9);
 }
-
-.fab:active { transform: scale(0.9); }
 
 .tx-overlay {
     position: fixed;
@@ -986,7 +1022,7 @@ input:focus, select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 900;
+    z-index: 2000;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -1034,7 +1070,7 @@ input:focus, select:focus {
     .tx-window .amount-hint { font-size: 0.75rem; }
 }
 
-.menu-btn, .menu-item, .fab, .btn-submit, .btn-cancel, .btn-confirm, .btn-icon, .close-modal, .icon-btn, .currency-option {
+.menu-btn, .menu-item, .fab, .btn-submit, .btn-cancel, .btn-confirm, .btn-icon, .close-modal, .icon-btn, .currency-option, .nav-filter-btn {
     transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -1044,7 +1080,6 @@ button:active { transform: scale(0.96); }
 .menu-item.import:active { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45); border-color: var(--primary-color); color: var(--primary-color); }
 .menu-item.clear:active { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.45); border-color: var(--danger-color); color: var(--danger-color); }
 .menu-item.filter:active { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.45); border-color: var(--warning-color); color: var(--warning-color); }
-.fab:active { transform: scale(0.9); box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.14), 0 4px 12px rgba(0, 0, 0, 0.2); }
 .btn-submit:active { transform: scale(0.98); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35); }
 .btn-confirm:active { transform: scale(0.95); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4); }
 .btn-cancel:active { transform: scale(0.95); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.25); }
@@ -1343,6 +1378,9 @@ button:active { transform: scale(0.96); }
     .filter-modal { padding: 18px; }
     .filter-tab { font-size: 0.8rem; padding: 9px 4px; }
     .cal-day { font-size: 0.8rem; }
+    .bottom-nav-bar { bottom: 16px; padding: 6px 8px; gap: 2px; }
+    .nav-filter-btn { font-size: 0.75rem; padding: 8px 4px; }
+    .bottom-nav-bar .fab { width: 44px; height: 44px; font-size: 1.2rem; }
 }
     </style>
 </head>
@@ -1370,12 +1408,6 @@ button:active { transform: scale(0.96); }
                     </div>
                     <p class="menu-brand-tagline">Mindful Spending, Peaceful Living</p>
                 </div>
-
-                <div class="menu-title">View</div>
-                <button type="button" class="menu-item filter" id="filter-time-btn" role="menuitem" title="Filter by time">
-                    <i class="fas fa-calendar-days"></i>
-                    <span>Filter by Time</span>
-                </button>
 
                 <div class="menu-title">Data</div>
                 <button type="button" class="menu-item export" id="save-data-btn" role="menuitem" title="Export data">
@@ -1495,10 +1527,15 @@ button:active { transform: scale(0.96); }
         </div>
     </div>
 
-    <div class="fab-container">
+    <!-- Replaced old FAB container with the new Bottom Navigation Bar -->
+    <div class="bottom-nav-bar">
+        <button type="button" class="nav-filter-btn" id="nav-filter-year">Yearly</button>
+        <button type="button" class="nav-filter-btn" id="nav-filter-month">Monthly</button>
         <button type="button" class="fab" id="fab-toggle" aria-label="Add transaction" title="Add transaction">
             <i class="fas fa-plus"></i>
         </button>
+        <button type="button" class="nav-filter-btn" id="nav-filter-custom">Custom</button>
+        <button type="button" class="nav-filter-btn active" id="nav-filter-all">All</button>
     </div>
 
     <div class="modal-overlay" id="confirmation-modal">
@@ -1544,6 +1581,7 @@ button:active { transform: scale(0.96); }
         </div>
     </div>
 
+    <!-- Filter modal kept for the custom date picker -->
     <div class="modal-overlay" id="filter-modal">
         <div class="modal filter-modal">
             <div class="modal-header">
@@ -1659,7 +1697,6 @@ const deleteModalCancel = document.getElementById('delete-modal-cancel');
 const deleteModalConfirm = document.getElementById('delete-modal-confirm');
 
 // Time filter elements
-const filterTimeBtn = document.getElementById('filter-time-btn');
 const filterModal = document.getElementById('filter-modal');
 const filterModalClose = document.getElementById('filter-modal-close');
 const filterShowAllBtn = document.getElementById('filter-show-all');
@@ -1677,6 +1714,12 @@ const calSelection = document.getElementById('cal-selection');
 const filterYearDesc = document.getElementById('filter-year-desc');
 const filterMonthDesc = document.getElementById('filter-month-desc');
 
+// Bottom Nav Filter buttons
+const navFilterYear = document.getElementById('nav-filter-year');
+const navFilterMonth = document.getElementById('nav-filter-month');
+const navFilterCustom = document.getElementById('nav-filter-custom');
+const navFilterAll = document.getElementById('nav-filter-all');
+
 let editingTransactionId = null;
 let overlayPressStarted = false;
 const emptyListText = document.getElementById('empty-list-text');
@@ -1688,7 +1731,7 @@ let pendingDeleteSwipeItem = null;
 let autoSaveTimer = null;
 const AUTO_SAVE_DELAY = 1000;
 
-// Time filter state (in-memory only â€” not persisted)
+// Time filter state (in-memory only � not persisted)
 let activeTimeFilter = {
     type: 'all',
     label: 'All Time',
@@ -1990,11 +2033,18 @@ function setupEventListeners() {
         if (e.target === currencyModal) currencyModal.classList.remove('active');
     });
 
-    // Time filter events
-    filterTimeBtn.addEventListener('click', () => {
-        closeMenu();
-        openFilterModal();
+    // Bottom Nav Filter events
+    navFilterYear.addEventListener('click', () => applyPresetFilter('year'));
+    navFilterMonth.addEventListener('click', () => applyPresetFilter('month'));
+    navFilterAll.addEventListener('click', () => {
+        resetTimeFilter();
+        showNotification('Showing all transactions', 'info');
     });
+    navFilterCustom.addEventListener('click', () => {
+        openFilterModal('custom');
+    });
+
+    // Time filter modal events
     filterModalClose.addEventListener('click', () => filterModal.classList.remove('active'));
     filterModal.addEventListener('click', (e) => {
         if (e.target === filterModal) filterModal.classList.remove('active');
@@ -2311,7 +2361,42 @@ function updateFilterStatus() {
     }
 }
 
-function openFilterModal() {
+function applyPresetFilter(type) {
+    const now = new Date();
+    let filter;
+    if (type === 'year') {
+        filter = {
+            type: 'year',
+            label: `This Year (${now.getFullYear()})`,
+            startDate: new Date(now.getFullYear(), 0, 1).toISOString(),
+            endDate: now.toISOString()
+        };
+    } else if (type === 'month') {
+        filter = {
+            type: 'month',
+            label: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+            startDate: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+            endDate: now.toISOString()
+        };
+    }
+    activeTimeFilter = filter;
+    hydrateUI();
+    showNotification(`Filter applied: ${filter.label}`, 'success');
+}
+
+function updateBottomNavActiveState() {
+    navFilterYear.classList.remove('active');
+    navFilterMonth.classList.remove('active');
+    navFilterCustom.classList.remove('active');
+    navFilterAll.classList.remove('active');
+
+    if (activeTimeFilter.type === 'year') navFilterYear.classList.add('active');
+    else if (activeTimeFilter.type === 'month') navFilterMonth.classList.add('active');
+    else if (activeTimeFilter.type === 'custom') navFilterCustom.classList.add('active');
+    else navFilterAll.classList.add('active');
+}
+
+function openFilterModal(defaultTab = 'year') {
     const now = new Date();
     if (filterYearDesc) {
         filterYearDesc.innerHTML = `Shows transactions from <strong>January 1, ${now.getFullYear()}</strong> to today.`;
@@ -2321,17 +2406,18 @@ function openFilterModal() {
         filterMonthDesc.innerHTML = `Shows transactions from <strong>${monthStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</strong> to today.`;
     }
 
-    let tab = 'year';
-    if (activeTimeFilter.type === 'month') tab = 'month';
-    else if (activeTimeFilter.type === 'custom') tab = 'custom';
-
-    if (activeTimeFilter.type === 'custom') {
-        const start = new Date(activeTimeFilter.startDate);
-        const end = new Date(activeTimeFilter.endDate);
-        calendarState.startDate = dateToKey(start);
-        calendarState.endDate = dateToKey(end);
-        calendarState.viewYear = start.getFullYear();
-        calendarState.viewMonth = start.getMonth();
+    let tab = defaultTab;
+    if (activeTimeFilter.type === 'custom' && defaultTab === 'year') tab = 'custom';
+    
+    if (activeTimeFilter.type === 'custom' || tab === 'custom') {
+        if(activeTimeFilter.startDate && activeTimeFilter.endDate) {
+            const start = new Date(activeTimeFilter.startDate);
+            const end = new Date(activeTimeFilter.endDate);
+            calendarState.startDate = dateToKey(start);
+            calendarState.endDate = dateToKey(end);
+            calendarState.viewYear = start.getFullYear();
+            calendarState.viewMonth = start.getMonth();
+        }
     }
 
     switchFilterTab(tab);
@@ -2482,6 +2568,7 @@ function hydrateUI() {
     updateBalance();
     updateSpendingSummary();
     updateFilterStatus();
+    updateBottomNavActiveState();
 }
 
 function renderTransactions() {
@@ -2803,7 +2890,7 @@ function showNotification(message, type = 'info') {
         padding: 15px 25px;
         border-radius: var(--radius-md);
         box-shadow: var(--glass-shadow);
-        z-index: 1001;
+        z-index: 2001;
         transform: translateX(150%);
         transition: transform 0.3s ease;
         color: white;
