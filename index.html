@@ -9,7 +9,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>ðŸ’¸</text></svg>">
     <style>
 /* Base Styles & Variables */
 :root {
@@ -160,6 +160,8 @@ body {
 .icon-btn:active {
     transform: scale(0.9);
 }
+
+.icon-btn[hidden] { display: none !important; }
 
 .brand-pill {
     padding: 10px 28px;
@@ -781,6 +783,9 @@ input:focus, select:focus {
     padding: 10px 18px; font-size: 0.9rem; border-radius: var(--radius-sm);
 }
 
+/* Budget / expense modals need to sit above the budget window */
+#budget-modal, #expense-modal, #delete-modal { z-index: 2200; }
+
 @media (max-width: 1024px) {
     .dashboard { grid-template-columns: 1fr; }
     .balance-amount { font-size: 2.8rem; }
@@ -859,6 +864,12 @@ input:focus, select:focus {
     transform: translateY(0);
 }
 
+/* Left-aligned dropdown (currency / budgets) */
+.menu-dropdown-left {
+    left: 0;
+    right: auto;
+}
+
 .menu-brand {
     text-align: center;
     padding: 6px 4px 14px;
@@ -930,6 +941,8 @@ input:focus, select:focus {
 .menu-item.import:hover { background: rgba(99, 102, 241, 0.2); border-color: var(--primary-color); color: var(--primary-color); }
 .menu-item.clear:hover { background: rgba(239, 68, 68, 0.2); border-color: var(--danger-color); color: var(--danger-color); }
 .menu-item.filter:hover { background: rgba(245, 158, 11, 0.2); border-color: var(--warning-color); color: var(--warning-color); }
+.menu-item.currency:hover { background: rgba(99, 102, 241, 0.2); border-color: var(--primary-color); color: var(--primary-color); }
+.menu-item.budget:hover { background: rgba(16, 185, 129, 0.2); border-color: var(--secondary-color); color: var(--secondary-color); }
 
 /* ===================================================== */
 /* Bottom Floating Navigation Bar                        */
@@ -1080,6 +1093,8 @@ button:active { transform: scale(0.96); }
 .menu-item.import:active { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45); border-color: var(--primary-color); color: var(--primary-color); }
 .menu-item.clear:active { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.45); border-color: var(--danger-color); color: var(--danger-color); }
 .menu-item.filter:active { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.45); border-color: var(--warning-color); color: var(--warning-color); }
+.menu-item.currency:active { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45); border-color: var(--primary-color); color: var(--primary-color); }
+.menu-item.budget:active { box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.45); border-color: var(--secondary-color); color: var(--secondary-color); }
 .btn-submit:active { transform: scale(0.98); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35); }
 .btn-confirm:active { transform: scale(0.95); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4); }
 .btn-cancel:active { transform: scale(0.95); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.25); }
@@ -1382,22 +1397,229 @@ button:active { transform: scale(0.96); }
     .nav-filter-btn { font-size: 0.75rem; padding: 8px 4px; }
     .bottom-nav-bar .fab { width: 44px; height: 44px; font-size: 1.2rem; }
 }
+
+/* ===================================================== */
+/* Budget Window ("fresh window")                        */
+/* ===================================================== */
+.budget-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    background: var(--bg-primary);
+    background-image:
+        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.budget-overlay.active { opacity: 1; visibility: visible; }
+
+.budget-window {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 20px 130px;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.budget-window-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.budget-window-header h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.budget-window-header h2 i { color: var(--primary-color); }
+
+.budget-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.budget-empty-state > i {
+    display: block;
+    font-size: 3rem;
+    color: var(--primary-color);
+    opacity: 0.6;
+    margin-bottom: 16px;
+}
+
+.budget-empty-state h3 {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+}
+
+.budget-empty-state p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.budget-empty-state strong { color: var(--primary-color); }
+
+.budget-summary-card {
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(30, 41, 59, 0.7));
+}
+
+.budget-remaining-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.budget-remaining-amount {
+    font-size: 2.6rem;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    margin: 6px 0 18px;
+    overflow-wrap: anywhere;
+}
+
+.budget-remaining-amount.positive { color: var(--secondary-color); }
+.budget-remaining-amount.negative { color: var(--danger-color); }
+
+.budget-stats .stat-value { font-size: 1.1rem; }
+
+.budget-used-pill {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.budget-expense-count {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.budget-progress {
+    height: 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    margin-top: 18px;
+}
+
+.budget-progress-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.4s ease, background-color 0.4s ease;
+}
+
+.budget-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.budget-expenses-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+}
+
+.budget-bottom-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.budget-bottom-bar .fab {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    color: white;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    transition: all 0.3s ease;
+}
+
+.budget-bottom-bar .fab:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.6);
+}
+
+.budget-bottom-bar .fab:active { transform: scale(0.9); }
+
+@media (max-width: 480px) {
+    .budget-window { padding: 16px 16px 120px; }
+    .budget-remaining-amount { font-size: 2rem; }
+    .budget-bottom-bar { bottom: 16px; }
+    .budget-bottom-bar .fab { width: 44px; height: 44px; font-size: 1.2rem; }
+}
     </style>
 </head>
 <body>
 
     <header class="app-bar">
-        <button type="button" class="icon-btn" id="currency-btn" aria-label="Select Currency">
-            <i class="fas fa-globe"></i>
-        </button>
+        <div class="menu-wrapper" id="left-menu-wrapper">
+            <button type="button" class="icon-btn" id="left-menu-toggle" aria-label="Open app menu" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="menu-dropdown menu-dropdown-left" id="left-menu-dropdown" role="menu">
+                <div class="menu-title">App</div>
+                <button type="button" class="menu-item currency" id="open-currency-btn" role="menuitem" title="Select currency">
+                    <i class="fas fa-globe"></i>
+                    <span>Select Currency</span>
+                </button>
+                <button type="button" class="menu-item budget" id="open-budget-btn" role="menuitem" title="Open budgets">
+                    <i class="fas fa-wallet"></i>
+                    <span>Budgets</span>
+                </button>
+            </div>
+        </div>
         
         <div class="brand-pill">
             <span><b>&nbsp&nbspZenBudget&nbsp&nbsp</b></span>
         </div>
         
         <div class="menu-wrapper" id="menu-wrapper">
-            <button type="button" class="icon-btn" id="menu-toggle" aria-label="Open menu" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-bars"></i>
+            <button type="button" class="icon-btn" id="menu-toggle" aria-label="Open data menu" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-database"></i>
             </button>
             
             <div class="menu-dropdown" id="menu-dropdown" role="menu">
@@ -1527,7 +1749,7 @@ button:active { transform: scale(0.96); }
         </div>
     </div>
 
-    <!-- Replaced old FAB container with the new Bottom Navigation Bar -->
+    <!-- Bottom Navigation Bar -->
     <div class="bottom-nav-bar">
         <button type="button" class="nav-filter-btn" id="nav-filter-year">Yearly</button>
         <button type="button" class="nav-filter-btn" id="nav-filter-month">Monthly</button>
@@ -1536,6 +1758,29 @@ button:active { transform: scale(0.96); }
         </button>
         <button type="button" class="nav-filter-btn" id="nav-filter-custom">Custom</button>
         <button type="button" class="nav-filter-btn active" id="nav-filter-all">All</button>
+    </div>
+
+    <!-- ================================================= -->
+    <!-- Budget Window (hidden by default)                  -->
+    <!-- ================================================= -->
+    <div class="budget-overlay" id="budget-overlay">
+        <div class="budget-window">
+            <header class="budget-window-header">
+                <button type="button" class="icon-btn" id="budget-window-close" aria-label="Back to dashboard">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 id="budget-window-title"><i class="fas fa-wallet"></i> Budgets</h2>
+                <button type="button" class="icon-btn" id="budget-edit-btn" aria-label="Edit budget" title="Edit budget" hidden>
+                    <i class="fas fa-pen"></i>
+                </button>
+            </header>
+            <div class="budget-window-body" id="budget-window-body"></div>
+        </div>
+        <div class="budget-bottom-bar">
+            <button type="button" class="fab" id="budget-fab" aria-label="Add budget or expense" title="Add">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
     </div>
 
     <div class="modal-overlay" id="confirmation-modal">
@@ -1578,6 +1823,54 @@ button:active { transform: scale(0.96); }
             </div>
             <div class="currency-list" id="currency-list">
             </div>
+        </div>
+    </div>
+
+    <!-- Budget creation / editing modal -->
+    <div class="modal-overlay" id="budget-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-wallet"></i> <span id="budget-modal-title-text">Create Budget</span></h3>
+                <button class="close-modal" id="budget-modal-close">&times;</button>
+            </div>
+            <form id="budget-form">
+                <div class="form-group">
+                    <label for="budget-amount"><i class="fas fa-coins"></i> Budget Amount</label>
+                    <div class="amount-input">
+                        <span class="currency-symbol"></span>
+                        <input type="number" id="budget-amount" step="0.01" min="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> <span id="budget-submit-text">Create Budget</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense creation / editing modal -->
+    <div class="modal-overlay" id="expense-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-receipt"></i> <span id="expense-modal-title-text">Add Expense</span></h3>
+                <button class="close-modal" id="expense-modal-close">&times;</button>
+            </div>
+            <form id="expense-form">
+                <div class="form-group">
+                    <label for="expense-name"><i class="fas fa-pen"></i> Expense Name</label>
+                    <input type="text" id="expense-name" placeholder="e.g., Lunch, Fuel, etc." required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-amount"><i class="fas fa-coins"></i> Amount</label>
+                    <div class="amount-input">
+                        <span class="currency-symbol"></span>
+                        <input type="number" id="expense-amount" step="0.01" min="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> <span id="expense-submit-text">Add Expense</span>
+                </button>
+            </form>
         </div>
     </div>
 
@@ -1638,9 +1931,9 @@ button:active { transform: scale(0.96); }
     <input type="file" id="file-input" accept=".json" style="display: none;">
     
     <script>
-// ZenBudget Finance Tracker - Enhanced with LocalStorage + Export/Import + Multi-Currency + Time Filter
+// ZenBudget Finance Tracker - Enhanced with LocalStorage + Export/Import + Multi-Currency + Time Filter + Budgets
 
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const LOCALSTORAGE_KEY = 'zenbudget_data';
 
 const appState = {
@@ -1652,6 +1945,7 @@ const appState = {
     },
     transactions: [],
     filteredTransactions: [],
+    budget: null, // { amount, createdAt, expenses: [{ id, name, amount, date }] }
     settings: {
         currency: 'GHS',
         currencySymbol: 'G'
@@ -1685,7 +1979,13 @@ const menuWrapper = document.getElementById('menu-wrapper');
 const menuToggle = document.getElementById('menu-toggle');
 const menuDropdown = document.getElementById('menu-dropdown');
 
-const currencyBtn = document.getElementById('currency-btn');
+// Left app menu (currency / budgets)
+const leftMenuWrapper = document.getElementById('left-menu-wrapper');
+const leftMenuToggle = document.getElementById('left-menu-toggle');
+const leftMenuDropdown = document.getElementById('left-menu-dropdown');
+const openCurrencyBtn = document.getElementById('open-currency-btn');
+const openBudgetBtn = document.getElementById('open-budget-btn');
+
 const currencyModal = document.getElementById('currency-modal');
 const currencyModalClose = document.getElementById('currency-modal-close');
 const currencyList = document.getElementById('currency-list');
@@ -1695,6 +1995,28 @@ const deleteModalMessage = document.getElementById('delete-modal-message');
 const deleteModalClose = document.getElementById('delete-modal-close');
 const deleteModalCancel = document.getElementById('delete-modal-cancel');
 const deleteModalConfirm = document.getElementById('delete-modal-confirm');
+
+// Budget window elements
+const budgetOverlay = document.getElementById('budget-overlay');
+const budgetWindowClose = document.getElementById('budget-window-close');
+const budgetEditBtn = document.getElementById('budget-edit-btn');
+const budgetWindowBody = document.getElementById('budget-window-body');
+const budgetFab = document.getElementById('budget-fab');
+
+const budgetModal = document.getElementById('budget-modal');
+const budgetModalClose = document.getElementById('budget-modal-close');
+const budgetForm = document.getElementById('budget-form');
+const budgetAmountInput = document.getElementById('budget-amount');
+const budgetModalTitleText = document.getElementById('budget-modal-title-text');
+const budgetSubmitText = document.getElementById('budget-submit-text');
+
+const expenseModal = document.getElementById('expense-modal');
+const expenseModalClose = document.getElementById('expense-modal-close');
+const expenseForm = document.getElementById('expense-form');
+const expenseNameInput = document.getElementById('expense-name');
+const expenseAmountInput = document.getElementById('expense-amount');
+const expenseModalTitleText = document.getElementById('expense-modal-title-text');
+const expenseSubmitText = document.getElementById('expense-submit-text');
 
 // Time filter elements
 const filterModal = document.getElementById('filter-modal');
@@ -1725,13 +2047,13 @@ let overlayPressStarted = false;
 const emptyListText = document.getElementById('empty-list-text');
 const emptySummaryText = document.getElementById('empty-summary-text');
 
-let pendingDeleteId = null;
+let pendingDeleteAction = null;
 let pendingDeleteSwipeItem = null;
 
 let autoSaveTimer = null;
 const AUTO_SAVE_DELAY = 1000;
 
-// Time filter state (in-memory only � not persisted)
+// Time filter state (in-memory only â€“ not persisted)
 let activeTimeFilter = {
     type: 'all',
     label: 'All Time',
@@ -1770,10 +2092,9 @@ function getCurrencyInfo(currencyCode) {
 }
 
 function updateCurrencySymbol() {
-    const currencySymbolElement = document.querySelector('.currency-symbol');
-    if (currencySymbolElement) {
-        currencySymbolElement.textContent = appState.settings.currencySymbol;
-    }
+    document.querySelectorAll('.currency-symbol').forEach(el => {
+        el.textContent = appState.settings.currencySymbol;
+    });
 }
 
 function changeCurrency(newCurrency) {
@@ -1873,6 +2194,9 @@ function loadFromLocalStorage() {
         if (!appState.settings) {
             appState.settings = { currency: 'GHS', currencySymbol: 'G' };
         }
+        if (appState.budget === undefined) {
+            appState.budget = null;
+        }
         
         appState.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
         appState.filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1898,6 +2222,20 @@ function validateAppState(data) {
         if (!t.category || typeof t.category !== 'string') return false;
         if (!t.date || typeof t.date !== 'string') return false;
         if (!t.type || (t.type !== 'income' && t.type !== 'expense')) return false;
+    }
+
+    if (data.budget !== undefined && data.budget !== null) {
+        if (typeof data.budget !== 'object') return false;
+        if (typeof data.budget.amount !== 'number' || isNaN(data.budget.amount)) return false;
+        if (!Array.isArray(data.budget.expenses)) return false;
+        for (let j = 0; j < data.budget.expenses.length; j++) {
+            const ex = data.budget.expenses[j];
+            if (!ex || typeof ex !== 'object') return false;
+            if (typeof ex.id !== 'number') return false;
+            if (typeof ex.name !== 'string') return false;
+            if (typeof ex.amount !== 'number' || isNaN(ex.amount)) return false;
+            if (typeof ex.date !== 'string') return false;
+        }
     }
     return true;
 }
@@ -1938,6 +2276,7 @@ function resetAppState() {
     };
     appState.transactions = [];
     appState.filteredTransactions = [];
+    appState.budget = null;
     appState.settings = { currency: 'GHS', currencySymbol: 'G' };
 }
 
@@ -1974,18 +2313,44 @@ function setupEventListeners() {
             openMenu();
         }
     });
+
+    leftMenuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (leftMenuDropdown.classList.contains('active')) {
+            closeLeftMenu();
+        } else {
+            openLeftMenu();
+        }
+    });
+
+    openCurrencyBtn.addEventListener('click', () => {
+        closeLeftMenu();
+        currencyModal.classList.add('active');
+    });
+
+    openBudgetBtn.addEventListener('click', () => {
+        closeLeftMenu();
+        openBudgetWindow();
+    });
     
     document.addEventListener('click', (e) => {
         if (!menuWrapper.contains(e.target)) closeMenu();
+        if (!leftMenuWrapper.contains(e.target)) closeLeftMenu();
     });
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeMenu();
-            closeTransactionWindow();
-            closeDeleteModal();
-            currencyModal.classList.remove('active');
-            filterModal.classList.remove('active');
+        if (e.key !== 'Escape') return;
+        const anyModalOpen = document.querySelector('.modal-overlay.active') !== null;
+        closeMenu();
+        closeLeftMenu();
+        closeTransactionWindow();
+        closeDeleteModal();
+        closeBudgetModal();
+        closeExpenseModal();
+        currencyModal.classList.remove('active');
+        filterModal.classList.remove('active');
+        if (!anyModalOpen && !txOverlay.classList.contains('active')) {
+            closeBudgetWindow();
         }
     });
     
@@ -2023,14 +2388,28 @@ function setupEventListeners() {
         if (e.target === deleteModal) closeDeleteModal();
     });
     
-    currencyBtn.addEventListener('click', () => {
-        currencyModal.classList.add('active');
-    });
     currencyModalClose.addEventListener('click', () => {
         currencyModal.classList.remove('active');
     });
     currencyModal.addEventListener('click', (e) => {
         if (e.target === currencyModal) currencyModal.classList.remove('active');
+    });
+
+    // Budget window events
+    budgetWindowClose.addEventListener('click', closeBudgetWindow);
+    budgetEditBtn.addEventListener('click', openBudgetModal);
+    budgetFab.addEventListener('click', handleBudgetFabClick);
+
+    budgetForm.addEventListener('submit', saveBudget);
+    budgetModalClose.addEventListener('click', closeBudgetModal);
+    budgetModal.addEventListener('click', (e) => {
+        if (e.target === budgetModal) closeBudgetModal();
+    });
+
+    expenseForm.addEventListener('submit', saveExpense);
+    expenseModalClose.addEventListener('click', closeExpenseModal);
+    expenseModal.addEventListener('click', (e) => {
+        if (e.target === expenseModal) closeExpenseModal();
     });
 
     // Bottom Nav Filter events
@@ -2070,8 +2449,9 @@ function setupEventListeners() {
     });
 }
 
-// =============== HAMBURGER MENU ===============
+// =============== MENUS ===============
 function openMenu() {
+    closeLeftMenu();
     menuDropdown.classList.add('active');
     menuToggle.classList.add('active');
     menuToggle.setAttribute('aria-expanded', 'true');
@@ -2082,7 +2462,20 @@ function closeMenu() {
     menuDropdown.classList.remove('active');
     menuToggle.classList.remove('active');
     menuToggle.setAttribute('aria-expanded', 'false');
-    menuToggle.querySelector('i').className = 'fas fa-bars';
+    menuToggle.querySelector('i').className = 'fas fa-database';
+}
+
+function openLeftMenu() {
+    closeMenu();
+    leftMenuDropdown.classList.add('active');
+    leftMenuToggle.setAttribute('aria-expanded', 'true');
+    leftMenuToggle.querySelector('i').className = 'fas fa-xmark';
+}
+
+function closeLeftMenu() {
+    leftMenuDropdown.classList.remove('active');
+    leftMenuToggle.setAttribute('aria-expanded', 'false');
+    leftMenuToggle.querySelector('i').className = 'fas fa-bars';
 }
 
 // =============== TRANSACTION WINDOW (ADD / EDIT) ===============
@@ -2199,17 +2592,17 @@ function filterTransactions() {
 }
 
 // =============== DELETE CONFIRMATION MODAL ===============
-function askDeleteConfirmation(transaction, swipeItem = null) {
-    pendingDeleteId = transaction.id;
+function askDeleteConfirmation(message, action, swipeItem = null) {
+    pendingDeleteAction = action;
     pendingDeleteSwipeItem = swipeItem;
-    deleteModalMessage.textContent = `Are you sure you want to delete "${transaction.name}"? This action cannot be undone.`;
+    deleteModalMessage.textContent = message;
     deleteModal.classList.add('active');
 }
 
 function closeDeleteModal() {
     if (!deleteModal.classList.contains('active')) return;
     deleteModal.classList.remove('active');
-    pendingDeleteId = null;
+    pendingDeleteAction = null;
     if (pendingDeleteSwipeItem) {
         closeSwipeItem(pendingDeleteSwipeItem);
         pendingDeleteSwipeItem = null;
@@ -2217,11 +2610,11 @@ function closeDeleteModal() {
 }
 
 function confirmDeleteTransaction() {
-    const id = pendingDeleteId;
-    pendingDeleteId = null;
+    const action = pendingDeleteAction;
+    pendingDeleteAction = null;
     pendingDeleteSwipeItem = null;
     deleteModal.classList.remove('active');
-    if (id !== null) deleteTransaction(id);
+    if (typeof action === 'function') action();
 }
 
 // =============== SWIPE-TO-DELETE ===============
@@ -2247,7 +2640,7 @@ function closeOpenSwipe(exceptEl) {
     if (openSwipeItem && openSwipeItem !== exceptEl) closeSwipeItem(openSwipeItem);
 }
 
-function makeSwipeable(itemEl, transaction) {
+function makeSwipeable(itemEl, onDeleteRequest) {
     const content = itemEl.querySelector('.transaction-content');
     if (!content) return;
 
@@ -2310,7 +2703,7 @@ function makeSwipeable(itemEl, transaction) {
             itemEl.classList.add('swiped');
             openSwipeItem = itemEl;
             setSwipeOffset(itemEl, -SWIPE_REVEAL_WIDTH, true);
-            askDeleteConfirmation(transaction, itemEl);
+            onDeleteRequest(itemEl);
         } else {
             closeSwipeItem(itemEl);
         }
@@ -2322,6 +2715,288 @@ function makeSwipeable(itemEl, transaction) {
         dragging = false;
         closeSwipeItem(itemEl);
     });
+}
+
+// =============== BUDGET FEATURE ===============
+function openBudgetWindow() {
+    closeMenu();
+    closeLeftMenu();
+    budgetOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    budgetOverlay.scrollTop = 0;
+    renderBudgetWindow();
+}
+
+function closeBudgetWindow() {
+    if (!budgetOverlay.classList.contains('active')) return;
+    if (openSwipeItem) closeSwipeItem(openSwipeItem);
+    budgetOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function handleBudgetFabClick() {
+    if (!appState.budget) {
+        openBudgetModal();
+    } else {
+        openExpenseModal();
+    }
+}
+
+function renderBudgetWindow() {
+    if (!budgetOverlay) return;
+    openSwipeItem = null;
+
+    const budget = appState.budget;
+
+    if (!budget) {
+        budgetEditBtn.hidden = true;
+        budgetWindowBody.innerHTML = `
+            <div class="budget-empty-state">
+                <i class="fas fa-wallet"></i>
+                <h3>No budget yet</h3>
+                <p>Tap the <strong>+</strong> button below to create your first budget.</p>
+            </div>
+        `;
+        return;
+    }
+
+    budgetEditBtn.hidden = false;
+
+    const spent = budget.expenses.reduce((sum, ex) => sum + Math.abs(ex.amount), 0);
+    const remaining = budget.amount - spent;
+    const pct = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+    const barColor = pct >= 100 ? 'var(--danger-color)'
+        : pct >= 75 ? 'var(--warning-color)'
+        : 'var(--secondary-color)';
+    const remainingClass = remaining < 0 ? 'negative' : 'positive';
+
+    budgetWindowBody.innerHTML = `
+        <div class="card budget-summary-card">
+            <div class="card-header">
+                <h2><i class="fas fa-wallet"></i> Budget Overview</h2>
+                <span class="budget-used-pill">${pct.toFixed(1)}% used</span>
+            </div>
+            <span class="budget-remaining-label">Remaining</span>
+            <div class="budget-remaining-amount ${remainingClass}">${formatCurrency(remaining)}</div>
+            <div class="balance-stats budget-stats">
+                <div class="stat">
+                    <span class="stat-label">Budgeted</span>
+                    <span class="stat-value">${formatCurrency(budget.amount)}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Spent</span>
+                    <span class="stat-value expense">${formatCurrency(spent)}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Remaining</span>
+                    <span class="stat-value ${remaining < 0 ? 'expense' : 'income'}">${formatCurrency(remaining)}</span>
+                </div>
+            </div>
+            <div class="budget-progress">
+                <div class="budget-progress-fill" style="width:${Math.min(pct, 100).toFixed(1)}%; background:${barColor};"></div>
+            </div>
+            <div class="budget-progress-meta">
+                <span>${formatCurrency(spent)} spent</span>
+                <span>${formatCurrency(budget.amount)} budget</span>
+            </div>
+        </div>
+        <div class="card budget-expenses-card">
+            <div class="card-header">
+                <h2><i class="fas fa-receipt"></i> Expenses</h2>
+                <span class="budget-expense-count">${budget.expenses.length} item${budget.expenses.length === 1 ? '' : 's'}</span>
+            </div>
+            <div class="transactions-list budget-expenses-list" id="budget-expenses-list"></div>
+        </div>
+    `;
+
+    const listEl = document.getElementById('budget-expenses-list');
+    if (!listEl) return;
+
+    if (budget.expenses.length === 0) {
+        listEl.innerHTML = `<p class="empty-list">No expenses yet. Tap the + button below to add one.</p>`;
+        return;
+    }
+
+    const sorted = [...budget.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+    sorted.forEach(expense => {
+        const el = createExpenseElement(expense);
+
+        const actions = document.createElement('div');
+        actions.className = 'transaction-actions';
+
+        const editBtnEl = document.createElement('button');
+        editBtnEl.type = 'button';
+        editBtnEl.className = 'edit-transaction btn-icon';
+        editBtnEl.title = 'Edit expense';
+        editBtnEl.setAttribute('aria-label', 'Edit expense');
+        editBtnEl.innerHTML = '<i class="fas fa-pen"></i>';
+        editBtnEl.addEventListener('click', () => openExpenseModal(expense));
+
+        actions.appendChild(editBtnEl);
+        el.querySelector('.transaction-content').appendChild(actions);
+
+        makeSwipeable(el, (item) => {
+            askDeleteConfirmation(
+                `Are you sure you want to delete "${expense.name}"? This action cannot be undone.`,
+                () => deleteExpense(expense.id),
+                item
+            );
+        });
+
+        listEl.appendChild(el);
+    });
+}
+
+function createExpenseElement(expense) {
+    const el = document.createElement('div');
+    el.className = 'transaction-item expense';
+    el.dataset.id = expense.id;
+
+    const date = new Date(expense.date);
+    const formattedDate = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const formattedAmount = formatCurrency(Math.abs(expense.amount));
+
+    el.innerHTML = `
+        <div class="swipe-delete-action" aria-hidden="true">
+            <i class="fas fa-trash"></i>
+            <span>Delete</span>
+        </div>
+        <div class="transaction-content">
+            <div class="transaction-info">
+                <div class="transaction-name">${escapeHtml(expense.name)}</div>
+                <div class="transaction-category">
+                    <i class="fas fa-receipt"></i> Expense
+                </div>
+                <div class="transaction-date">${formattedDate}</div>
+            </div>
+            <div class="transaction-amount expense">
+                -${formattedAmount}
+            </div>
+        </div>
+    `;
+
+    return el;
+}
+
+function deleteExpense(id) {
+    if (!appState.budget) return;
+    appState.budget.expenses = appState.budget.expenses.filter(x => x.id !== id);
+    markStateChanged();
+    renderBudgetWindow();
+    showNotification('Expense deleted successfully!', 'success');
+}
+
+// ---------- Budget amount modal ----------
+function openBudgetModal() {
+    const isEdit = !!appState.budget;
+    budgetModalTitleText.textContent = isEdit ? 'Edit Budget' : 'Create Budget';
+    budgetSubmitText.textContent = isEdit ? 'Save Budget' : 'Create Budget';
+    budgetAmountInput.value = isEdit ? appState.budget.amount : '';
+    budgetModal.classList.add('active');
+    setTimeout(() => budgetAmountInput.focus(), 100);
+}
+
+function closeBudgetModal() {
+    budgetModal.classList.remove('active');
+}
+
+function saveBudget(e) {
+    e.preventDefault();
+    const amount = parseFloat(budgetAmountInput.value);
+
+    if (isNaN(amount) || amount <= 0) {
+        showNotification('Please enter a budget amount greater than zero.', 'error');
+        return;
+    }
+
+    if (appState.budget) {
+        appState.budget.amount = amount;
+        showNotification('Budget updated successfully!', 'success');
+    } else {
+        appState.budget = {
+            amount,
+            createdAt: new Date().toISOString(),
+            expenses: []
+        };
+        showNotification('Budget created! Start adding your expenses.', 'success');
+    }
+
+    markStateChanged();
+    closeBudgetModal();
+    renderBudgetWindow();
+}
+
+// ---------- Expense modal ----------
+let editingExpenseId = null;
+
+function openExpenseModal(expense = null) {
+    expenseForm.reset();
+
+    if (expense) {
+        editingExpenseId = expense.id;
+        expenseNameInput.value = expense.name;
+        expenseAmountInput.value = expense.amount;
+        expenseModalTitleText.textContent = 'Edit Expense';
+        expenseSubmitText.textContent = 'Save Changes';
+    } else {
+        editingExpenseId = null;
+        expenseModalTitleText.textContent = 'Add Expense';
+        expenseSubmitText.textContent = 'Add Expense';
+    }
+
+    expenseModal.classList.add('active');
+    setTimeout(() => expenseNameInput.focus(), 100);
+}
+
+function closeExpenseModal() {
+    expenseModal.classList.remove('active');
+    editingExpenseId = null;
+}
+
+function saveExpense(e) {
+    e.preventDefault();
+    const name = expenseNameInput.value.trim();
+    const amount = parseFloat(expenseAmountInput.value);
+
+    if (!name || isNaN(amount) || amount <= 0) {
+        showNotification('Please enter a valid name and a positive amount.', 'error');
+        return;
+    }
+    if (!appState.budget) return;
+
+    const wasEditing = editingExpenseId !== null;
+
+    if (wasEditing) {
+        const expense = appState.budget.expenses.find(x => x.id === editingExpenseId);
+        if (expense) {
+            expense.name = name;
+            expense.amount = amount;
+        }
+    } else {
+        appState.budget.expenses.push({
+            id: Date.now() + Math.random(),
+            name,
+            amount,
+            date: new Date().toISOString()
+        });
+    }
+
+    markStateChanged();
+    closeExpenseModal();
+    renderBudgetWindow();
+
+    const spent = appState.budget.expenses.reduce((sum, x) => sum + Math.abs(x.amount), 0);
+    if (spent > appState.budget.amount) {
+        showNotification(`${wasEditing ? 'Expense updated' : 'Expense added'} â€” you are now over budget!`, 'warning');
+    } else {
+        showNotification(wasEditing ? 'Expense updated successfully!' : 'Expense added successfully!', 'success');
+    }
 }
 
 // =============== TIME FILTER ===============
@@ -2569,6 +3244,9 @@ function hydrateUI() {
     updateSpendingSummary();
     updateFilterStatus();
     updateBottomNavActiveState();
+    if (budgetOverlay.classList.contains('active')) {
+        renderBudgetWindow();
+    }
 }
 
 function renderTransactions() {
@@ -2605,8 +3283,15 @@ function renderTransactions() {
         
         actions.appendChild(editButton);
         transactionElement.querySelector('.transaction-content').appendChild(actions);
-        
-        makeSwipeable(transactionElement, transaction);
+
+        makeSwipeable(transactionElement, (item) => {
+            askDeleteConfirmation(
+                `Are you sure you want to delete "${transaction.name}"? This action cannot be undone.`,
+                () => deleteTransaction(transaction.id),
+                item
+            );
+        });
+
         transactionsList.appendChild(transactionElement);
     });
 }
@@ -2795,6 +3480,7 @@ function importData(event) {
             Object.assign(appState, importedData);
             if (!appState.filteredTransactions) appState.filteredTransactions = [...appState.transactions];
             if (!appState.settings) appState.settings = { currency: 'GHS', currencySymbol: 'G' };
+            if (appState.budget === undefined) appState.budget = null;
             
             appState.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
             appState.filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -2825,9 +3511,11 @@ function closeModal() {
 }
 
 function clearAllTransactions() {
-    resetAppState();
-    clearLocalStorage();
+    // Clears only transactions â€” currency preference and budget are preserved.
+    appState.transactions = [];
+    appState.filteredTransactions = [];
     activeTimeFilter = { type: 'all', label: 'All Time', startDate: null, endDate: null };
+    markStateChanged();
     hydrateUI();
     closeModal();
     showNotification('All transactions have been cleared.', 'success');
@@ -2890,7 +3578,7 @@ function showNotification(message, type = 'info') {
         padding: 15px 25px;
         border-radius: var(--radius-md);
         box-shadow: var(--glass-shadow);
-        z-index: 2001;
+        z-index: 3000;
         transform: translateX(150%);
         transition: transform 0.3s ease;
         color: white;
