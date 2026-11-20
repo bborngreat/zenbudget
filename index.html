@@ -1433,18 +1433,7 @@ button:active { transform: scale(0.96); }
     margin-bottom: 24px;
 }
 
-.budget-window-header h2 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-align: center;
-}
-
-.budget-window-header h2 i { color: var(--primary-color); }
+.budget-title-pill { justify-self: center; }
 
 .budget-empty-state {
     text-align: center;
@@ -1515,12 +1504,19 @@ button:active { transform: scale(0.96); }
     white-space: nowrap;
 }
 
+.budget-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+}
+
 .budget-progress {
+    flex: 1;
     height: 12px;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.08);
     overflow: hidden;
-    margin-top: 18px;
 }
 
 .budget-progress-fill {
@@ -1769,7 +1765,7 @@ button:active { transform: scale(0.96); }
                 <button type="button" class="icon-btn" id="budget-window-close" aria-label="Back to dashboard">
                     <i class="fas fa-arrow-left"></i>
                 </button>
-                <h2 id="budget-window-title"><i class="fas fa-wallet"></i> Budgets</h2>
+                <div class="brand-pill budget-title-pill"><span id="budget-window-title"><b>My budget</b></span></div>
                 <button type="button" class="icon-btn" id="budget-edit-btn" aria-label="Edit budget" title="Edit budget" hidden>
                     <i class="fas fa-pen"></i>
                 </button>
@@ -2183,6 +2179,8 @@ function loadFromLocalStorage() {
         }
         
         Object.assign(appState, parsedData);
+        if (!appState.meta || typeof appState.meta !== 'object') appState.meta = {};
+        appState.meta.version = APP_VERSION;
         
         if (!appState.filteredTransactions || !Array.isArray(appState.filteredTransactions)) {
             appState.filteredTransactions = [...appState.transactions];
@@ -2774,7 +2772,6 @@ function renderBudgetWindow() {
         <div class="card budget-summary-card">
             <div class="card-header">
                 <h2><i class="fas fa-wallet"></i> Budget Overview</h2>
-                <span class="budget-used-pill">${pct.toFixed(1)}% used</span>
             </div>
             <span class="budget-remaining-label">Remaining</span>
             <div class="budget-remaining-amount ${remainingClass}">${formatCurrency(remaining)}</div>
@@ -2787,13 +2784,12 @@ function renderBudgetWindow() {
                     <span class="stat-label">Spent</span>
                     <span class="stat-value expense">${formatCurrency(spent)}</span>
                 </div>
-                <div class="stat">
-                    <span class="stat-label">Remaining</span>
-                    <span class="stat-value ${remaining < 0 ? 'expense' : 'income'}">${formatCurrency(remaining)}</span>
-                </div>
             </div>
-            <div class="budget-progress">
-                <div class="budget-progress-fill" style="width:${Math.min(pct, 100).toFixed(1)}%; background:${barColor};"></div>
+            <div class="budget-progress-row">
+                <div class="budget-progress">
+                    <div class="budget-progress-fill" style="width:${Math.min(pct, 100).toFixed(1)}%; background:${barColor};"></div>
+                </div>
+                <span class="budget-used-pill">${pct.toFixed(1)}%</span>
             </div>
             <div class="budget-progress-meta">
                 <span>${formatCurrency(spent)} spent</span>
@@ -3440,6 +3436,7 @@ function updateSpendingSummary() {
 // =============== DATA EXPORT/IMPORT ===============
 function exportData() {
     try {
+        appState.meta.version = APP_VERSION;
         appState.meta.lastUpdated = new Date().toISOString();
         saveToLocalStorage();
         const dataStr = JSON.stringify(appState, null, 2);
@@ -3478,6 +3475,8 @@ function importData(event) {
             }
             
             Object.assign(appState, importedData);
+            if (!appState.meta || typeof appState.meta !== 'object') appState.meta = {};
+            appState.meta.version = APP_VERSION;
             if (!appState.filteredTransactions) appState.filteredTransactions = [...appState.transactions];
             if (!appState.settings) appState.settings = { currency: 'GHS', currencySymbol: 'G' };
             if (appState.budget === undefined) appState.budget = null;
